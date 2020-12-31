@@ -1,0 +1,40 @@
+General Steps
+1. Pass in List of files and list of keywords through terminal
+2. Throw exception if suffix of file and remove this from list is not specified or not allowed
+3. Run a thread for each file, which scans for the words using multiprocessing
+4. If at least one word is found, create a page object that highlights word(s). highlighting is done by word index + len(word).
+5. When a file scan is finished Enter a while loop that allows user to see result
+    choose a file via index (while loop)
+    list general info for file such as: number of hits per word
+    for each word, give option to browse hit pages associated with it (should probably be stored as dictionary). also a loop
+    Note: in each loop, if q is typed, you exit and go back one loop. if q! is typed, exit all loops and end program
+
+  NOTE: Classes will have to be written in a manner that allows for them to be easily cythonized.
+  These will be stored in the pyx file. The main loop will then be run separately in the py file using the cythonized code.
+
+
+
+
+CLASSES NEEDED
+1. Word manager
+  List: occurrences
+  Variable: word
+  variable: color
+2. Page
+    Note: each word should have a different color
+    takes list of word managers as input (same as Files)
+    has a number
+    has an amount of word hits (since a page can have multiple different words as hits these will be stored in word managers)
+    has a display method that builds page
+3. Search utility
+    Methods are all the different search functions. Constructor param which is a file, dictates which method is run
+    should be able to specify if cases matter
+4. File
+  has a list of word managers
+  has a suffix
+  has a list of pages (in the case of txt or code this is just one giant page)
+  has a Display method that displays occurrences as text in (page,row) tuple pairs,
+
+
+Multi-File-Search
+Search multiple files for multiple words simultaneously
