@@ -158,8 +158,3 @@ class Page:
             res.append('│' + (line + ' ' * width)[:width] + '│')
         res.append('└' + '─' * width + '┘')
         return '\n'.join(res)
-
-
-
-file = File("/Users/Felix Vaughan/Documents/Textbooks/forallxyyc.pdf",["one","two"])
-print(extractPageContents(file))
