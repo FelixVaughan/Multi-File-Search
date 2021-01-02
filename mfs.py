@@ -1,9 +1,10 @@
 import slate3k as PDFReader
-from os.path import splitext
 import random
+import sys
+import shutil
 
 ACCEPTABLE_SUFFIXES = ["pdf","txt","c","cpp","py","pyx","java"] #this list can be extended to include any type of code file. These are not all included for obvious reasons
-def checkSuffix(suffix):
+def allowedSuffix(suffix):
     if suffix not in ACCEPTABLE_SUFFIXES:
         return False
     else:
@@ -20,6 +21,19 @@ def findOccurences(key,word,wordStore,cycle):
             else:
                 wordStore.append(cycle + index - 3)
             index += len(key)
+
+def extractPageContents(fileObject):
+    fileContent = []
+    if(fileObject.getSuffix() == "pdf"):
+        file = open(fileObject.path, "rb")
+        fileContent = PDFReader.PDF(file)
+    else:
+        file = open(fileObject.path, encoding="utf8")
+        content = file.read()
+        fileContent.append(content)
+    return fileContent
+
+
 
 def readPDF(stream, keyword):
     with open(stream,"rb") as file:
@@ -64,9 +78,9 @@ class Color:
         self.initializeColors()
 
     def initializeColors(self):
-        for i in color.__dict__:
+        for i in Color.__dict__:
             if(i.find("__") == -1 and i != 'END' and i != 'BOLD' and i.isupper()):
-                self.available[i] = color.__dict__[i]
+                self.available[i] = Color.__dict__[i]
 
     def selectRandomColor(self):
         key, value = random.choice(list(self.available.items()))
@@ -77,11 +91,15 @@ class Color:
 
 
 class WordManager:
-    def __init__(self, word):
+    def __init__(self, word, color=None):
         self.word = word
         self.occurences = []
-        self.color = None #each File will have a color object. choose color from this object then use it to highlight below variable.
-        self.highlightedWord = None
+        if color is None:
+            self.color = None
+            self.highlightedWord = self.word
+        else:
+            self.color = color
+            self.highlightedWord = Color.BOLD + self.color + self.word + Color.END
 
     def frequency():
         return len(occurences)
@@ -90,16 +108,32 @@ class WordManager:
         self.occurences.append((page,row))
 
 class File:
-    def __init__(self,path):
+    def __init__(self,path,listOfWords):
+        self.colors = Color()
+        self.wordsToManage = [] #make sure list is of type word managers. loop through these and set colors
         self.path = path
+        self.pages = []
         try:
-            if checkSuffix(self.getSuffix()) == False:
+            if not allowedSuffix(self.getSuffix()):
                 raise ValueError
-            self.file = open(path,"r")
+            if self.getSuffix() == "pdf":
+                self.file = open(path, "rb")
+            else:
+                self.file = open(path, encoding="utf8")
+
+            if listOfWords:
+                for word in listOfWords:
+                    wordObject = WordManager(word, self.colors.selectRandomColor())
+                    self.wordsToManage.append(wordObject)
+            else:
+                print("No words to search, goodbye!")
+                sys.exit()
+
         except ValueError:
             print(f"'{path}' does not contain a valid suffix, skipping...") #make sure to add skip clause in main loop
         except FileNotFoundError:
             print(f"No file found at '{path}', skipping...")   #make sure to add skip clause in main loop
+
 
     def getSuffix(self):
         reverse_path = self.path[::-1]
@@ -107,4 +141,25 @@ class File:
         reverse_suffix = reverse_path[0:suffix_index]
         return reverse_suffix[::-1]
 
-file = File("/Users/Felix Vaughan/Desktop/toAlex.txt")
+
+class Page:
+    def __init__(self,content, width, hits, num = None):
+        if num is None:
+            self.number = 1
+        self.number = num
+        self.hits = hits #word number pairs
+        self.raw_content = content
+        self.content = self.pagify(content, width)
+
+    def pagify(self, string, width):
+        lines = string.splitlines()
+        res = ['┌' + '─' * width + '┐']
+        for line in lines:
+            res.append('│' + (line + ' ' * width)[:width] + '│')
+        res.append('└' + '─' * width + '┘')
+        return '\n'.join(res)
+
+
+
+file = File("/Users/Felix Vaughan/Documents/Textbooks/forallxyyc.pdf",["one","two"])
+print(extractPageContents(file))
