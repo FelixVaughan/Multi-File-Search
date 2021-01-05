@@ -3,7 +3,7 @@ import random
 import sys
 import shutil
 
-ACCEPTABLE_SUFFIXES = ["pdf","txt","c","cpp","py","pyx","java"] #this list can be extended to include any type of code file. These are not all included for obvious reasons
+ACCEPTABLE_SUFFIXES = ["pdf","txt","c","cpp","py","pyx","java"] #can be extended to all code types. Limited here for obvious reasons
 def allowedSuffix(suffix):
     if suffix not in ACCEPTABLE_SUFFIXES:
         return False
@@ -35,32 +35,6 @@ def extractPageContents(fileObject):
 
 
 
-def readPDF(stream, keyword):
-    with open(stream,"rb") as file:
-        pdf = PDFReader.PDF(file)
-        occurences = []
-        for content in pdf:
-            print(content)
-            findOccurences(keyword,content,occurences,0)
-        print(len(occurences))
-
-def readText(file, keyword):
-    absKeyLength = len(keyword) - 1
-    file = input("File to search: ")
-    with open(file, encoding='utf8') as f:
-        carryOver = ""
-        cycle = 0
-        occurences = []
-        while True:
-            data = f.read(1024)
-            if not data:
-                break
-
-            data = carryOver + data
-            findOccurences(keyword,data,occurences,cycle)
-            suffix = data[len(data)-absKeyLength - 1 : len(data)]
-            carryOver = cycle + 1024
-        print(occurences)
 
 class Color:
     PURPLE = '\033[95m'
@@ -158,3 +132,44 @@ class Page:
             res.append('│' + (line + ' ' * width)[:width] + '│')
         res.append('└' + '─' * width + '┘')
         return '\n'.join(res)
+
+
+class TreeNode:
+    def __init__(self):
+        self.children = {}
+        self.isEndOfWord = False
+
+class TrieTree:
+    def __init__(self,root):
+        self.root = root
+
+    def insert(self,word):
+        current = self.root
+        for w in word:
+            if w not in current.children.keys():
+                node = TreeNode()
+                current.children[w] = node
+                current = node
+            else:
+                current = current.children[w]
+        current.isEndOfWord = True
+
+    def search(self,word,storage):
+        for index in range(len(word)):
+            depth = 0
+            current = self.root
+            current_word = []
+            for w in word[index:]:
+                if current.children:
+                    if w not in current.children.keys():
+                        break
+                    else:
+                        current = current.children[w]
+                        depth += 1
+                        current_word.append(w)
+                        if current.isEndOfWord:
+                            current_word_string = "".join(current_word)
+                            if current_word_string not in storage.keys():
+                                storage[current_word_string] = []
+                            storage["".join(current_word)].append((index,depth))
+        return storage
