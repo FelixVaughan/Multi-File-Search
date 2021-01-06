@@ -172,17 +172,3 @@ class TrieTree:
                                 storage[current_word_string] = []
                             storage["".join(current_word)].append((index,depth))
         return storage
-
-'''
-Preprocessing steps
-1. For each file arg, make a File object that takes in a list of words to be converted into wordManagers
-Multiprocessing steps
-1. pass in a File
-2. extract file page contents
-3. search page
-4. if search returns a non empty dict create Page object else continue
-6. insert highlights into page content using returned search function data
-7. pagify page content
-8. save general stats about page (should use a method or variable for this)
-9. save File object in array
-'''
