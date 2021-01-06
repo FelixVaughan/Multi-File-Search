@@ -1,5 +1,6 @@
 from mfs import *
 import sys
+import threading
 
 #windows does not allow ANSI colors by default.
 if sys.platform.find("win") is not -1:
@@ -45,7 +46,6 @@ def processFile(fileObject,wordTree,destination):
             for r in result:
                 amountOfOccurences = len(result[r])
                 page_content = page_content.replace(r,fileObject.wordsToManage[r].highlightedWord)
-                print(fileObject.wordsToManage[r].highlightedWord)
                 fileObject.wordsToManage[r].frequency += amountOfOccurences
                 hits += amountOfOccurences
             page = Page(page_content,result,hits,p)
@@ -58,18 +58,16 @@ def main():
     files = args[0]
     words = args[1]
     fileObjects = initializedFiles(files,words)
-    treeOfWords = initializedTree(words)
+    wordTree = initializedTree(words)
     completedFiles = [] #make thread safe
-    #now run these via multiprocessing pool
-
+    threads = []
+    for file in fileObjects:
+        thread = threading.Thread(target=processFile,args=[file,wordTree,completedFiles])
+        thread.start()
+        threads.append(thread)
+    for thread in threads:
+        thread.join()
+    print(completedFiles)
+    
 if __name__ == "__main__":
-    pass
-    #main()
-
-trie = TrieTree(TreeNode())
-file = File("/Users/Felix Vaughan/Desktop/main.py",["it","was"])
-trie.insert("it")
-trie.insert("was")
-mystore = []
-processFile(file,trie,mystore)
-print(mystore[0].pages[0].content)
+    main()
