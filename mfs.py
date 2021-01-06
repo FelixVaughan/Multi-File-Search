@@ -10,7 +10,7 @@ def allowedSuffix(suffix):
     else:
         return True
 
-def findOccurences(key,word,wordStore,cycle):
+def findOccurences(key,word,wordStore,cycle): #slow but easy. Use for testing
     index = 0
     while index < len(word):
             index = word.find(key, index)
@@ -67,7 +67,7 @@ class Color:
 class WordManager:
     def __init__(self, word, color=None):
         self.word = word
-        self.occurences = []
+        self.frequency = 0
         if color is None:
             self.color = None
             self.highlightedWord = self.word
@@ -75,18 +75,14 @@ class WordManager:
             self.color = color
             self.highlightedWord = Color.BOLD + self.color + self.word + Color.END
 
-    def frequency():
-        return len(occurences)
-
-    def addOccurrence(self,page,row):
-        self.occurences.append((page,row))
 
 class File:
     def __init__(self,path,listOfWords):
         self.colors = Color()
-        self.wordsToManage = [] #make sure list is of type word managers. loop through these and set colors
+        self.wordsToManage = {}
         self.path = path
         self.pages = []
+        self.info = {}
         try:
             if not allowedSuffix(self.getSuffix()):
                 raise ValueError
@@ -98,15 +94,16 @@ class File:
             if listOfWords:
                 for word in listOfWords:
                     wordObject = WordManager(word, self.colors.selectRandomColor())
-                    self.wordsToManage.append(wordObject)
+                    self.wordsToManage[word] = wordObject
             else:
-                print("No words to search, goodbye!")
-                sys.exit()
+                sys.exit("No words to search, goodbye!")
 
         except ValueError:
             print(f"'{path}' does not contain a valid suffix, skipping...") #make sure to add skip clause in main loop
+            raise ValueError
         except FileNotFoundError:
             print(f"No file found at '{path}', skipping...")   #make sure to add skip clause in main loop
+            raise FileNotFoundError
 
 
     def getSuffix(self):
@@ -117,16 +114,18 @@ class File:
 
 
 class Page:
-    def __init__(self,content, width, hits, num = None):
+    def __init__(self, content, info, hits, num = None):
         if num is None:
             self.number = 1
+        self.info = info
         self.number = num
-        self.hits = hits #word number pairs
+        self.hits = hits
         self.raw_content = content
-        self.content = self.pagify(content, width)
+        self.content = self.pagify(content)
 
-    def pagify(self, string, width):
+    def pagify(self, string):
         lines = string.splitlines()
+        width = max(len(s) for s in lines)
         res = ['┌' + '─' * width + '┐']
         for line in lines:
             res.append('│' + (line + ' ' * width)[:width] + '│')
@@ -173,3 +172,17 @@ class TrieTree:
                                 storage[current_word_string] = []
                             storage["".join(current_word)].append((index,depth))
         return storage
+
+'''
+Preprocessing steps
+1. For each file arg, make a File object that takes in a list of words to be converted into wordManagers
+Multiprocessing steps
+1. pass in a File
+2. extract file page contents
+3. search page
+4. if search returns a non empty dict create Page object else continue
+6. insert highlights into page content using returned search function data
+7. pagify page content
+8. save general stats about page (should use a method or variable for this)
+9. save File object in array
+'''
