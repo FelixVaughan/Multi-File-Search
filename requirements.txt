@@ -1,2 +1,1 @@
 slate3k==0.5.3
-colorama==0.4.4
