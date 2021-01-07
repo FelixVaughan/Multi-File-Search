@@ -1,11 +1,11 @@
 from mfs import *
 import sys
 import threading
+import os
 
 #windows does not allow ANSI colors by default.
 if sys.platform.find("win") is not -1:
-    from colorama import init
-    init()
+    os.system("color")
 
 def splitArgs(lst):
     try:
@@ -51,7 +51,30 @@ def processFile(fileObject,wordTree,destination):
             page = Page(page_content,result,hits,p)
             fileObject.pages.append(page)
     destination.append(fileObject)
-    # TODO: add some info to file hits field var
+
+def displayLoop(completedFiles):
+    numberOfFiles = len(completedFiles)
+    os.system('clear')
+    fileSelectMessage =  f"you have {len(completedFiles)} files to view.\n"
+    for i in range(numberOfFiles):
+        option = f"  Press {i} to view '{completedFiles[i].path}' Press q to exit\n"
+        fileSelectMessage += option
+    while True:
+        try:
+            userInput = input(fileSelectMessage)
+            if userInput == 'q': break
+            isinstance(userInput,int)
+            fileSelect = eval(userInput)
+            file = completedFiles[fileSelect]
+            status = file.display()
+            if status == "quit": break
+        except (NameError, IndexError):
+            print("Input is not valid. Try again.")
+            continue
+        finally:
+            os.system('clear')
+
+
 
 def main():
     args = splitArgs(sys.argv)
@@ -59,7 +82,7 @@ def main():
     words = args[1]
     fileObjects = initializedFiles(files,words)
     wordTree = initializedTree(words)
-    completedFiles = [] #make thread safe
+    completedFiles = []
     threads = []
     for file in fileObjects:
         thread = threading.Thread(target=processFile,args=[file,wordTree,completedFiles])
@@ -67,7 +90,7 @@ def main():
         threads.append(thread)
     for thread in threads:
         thread.join()
-    print(completedFiles)
-    
+    displayLoop(completedFiles)
+
 if __name__ == "__main__":
     main()

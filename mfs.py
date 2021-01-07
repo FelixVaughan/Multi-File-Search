@@ -2,20 +2,18 @@ import slate3k as PDFReader
 import random
 import sys
 import shutil
+import os
 
 ACCEPTABLE_SUFFIXES = ["pdf","txt","c","cpp","py","pyx","java"] #can be extended to all code types. Limited here for obvious reasons
 def allowedSuffix(suffix):
-    if suffix not in ACCEPTABLE_SUFFIXES:
-        return False
-    else:
-        return True
+    if suffix not in ACCEPTABLE_SUFFIXES: return False
+    else: return True
 
 def findOccurences(key,word,wordStore,cycle): #slow but easy. Use for testing
     index = 0
     while index < len(word):
             index = word.find(key, index)
-            if index == -1:
-                break
+            if index == -1: break
             if cycle < 2:
                 wordStore.append(cycle + index)
             else:
@@ -99,11 +97,11 @@ class File:
                 sys.exit("No words to search, goodbye!")
 
         except ValueError:
-            print(f"'{path}' does not contain a valid suffix, skipping...") #make sure to add skip clause in main loop
-            raise ValueError
+            print(f"'{path}' does not contain a valid suffix, skipping...")
+            raise ValueError #allows for file to be skipped in main loop
         except FileNotFoundError:
-            print(f"No file found at '{path}', skipping...")   #make sure to add skip clause in main loop
-            raise FileNotFoundError
+            print(f"No file found at '{path}', skipping...")
+            raise FileNotFoundError #allows for file to be skipped in main loop
 
 
     def getSuffix(self):
@@ -112,11 +110,36 @@ class File:
         reverse_suffix = reverse_path[0:suffix_index]
         return reverse_suffix[::-1]
 
+    def printPage(self,pageNumber):
+        os.system('clear')
+        print(f"{[p.number for p in self.pages]}\nCurrently on page {self.pages[pageNumber].number}")
+        page = self.pages[pageNumber]
+        print(f"{page.content}\n{page.hits} hits")
+        for word in page.info:
+            print(f"word: '{word}' found at index(es): ", [i[0] for i in page.info[word]])
+
+    def display(self):
+        print(f"{len(self.pages)} page(s) match in file. Naviagte with a or d to or type a number to goto page. q to go back and q! to exit")
+        pageNumber = 0
+        while True:
+            do = input("")
+            if do == 'q': break
+            elif do == "q!": return "quit"
+            elif do == 'd' and len(self.pages) > 1 and pageNumber is not len(self.pages)-1: pageNumber += 1
+            elif do == 'a' and len(self.pages) > 1 and pageNumber is not 0: pageNumber -= 1
+            else:
+                try:
+                    isinstance(eval(do),int)
+                    pageNumber = eval(do)
+                except NameError:
+                    print("Input not valid. Try again")
+                    continue
+            self.printPage(pageNumber)
+
 
 class Page:
     def __init__(self, content, info, hits, num = None):
-        if num is None:
-            self.number = 1
+        if num is None: self.number = 1
         self.info = info
         self.number = num
         self.hits = hits
@@ -170,5 +193,5 @@ class TrieTree:
                             current_word_string = "".join(current_word)
                             if current_word_string not in storage.keys():
                                 storage[current_word_string] = []
-                            storage["".join(current_word)].append((index,depth))
+                            storage[current_word_string].append((index,depth))
         return storage
